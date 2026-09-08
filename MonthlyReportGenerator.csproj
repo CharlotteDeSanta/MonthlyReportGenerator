@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+	<!-- 单文件，框架依赖 -->
+	<PublishSingleFile>true</PublishSingleFile>
+	<SelfContained>false</SelfContained>
+	<!-- 发布时不生成.pdb -->
+	<DebugType>None</DebugType>
+	<DebugSymbols>false</DebugSymbols>
+	<!-- 应用图标（exe 文件与任务栏） -->
+	<ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ExampleFiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 标题栏图标用的 PNG，作为资源打包进 exe -->
+    <Resource Include="Assets\app.png" />
+  </ItemGroup>
+
+</Project>

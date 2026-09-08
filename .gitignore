@@ -1,0 +1,15 @@
+# ===== Visual Studio / .NET 构建产物 =====
+bin/
+obj/
+.vs/
+publish/
+TestResults/
+
+# ===== 用户级文件 =====
+*.user
+*.suo
+
+# ===== 其他 =====
+*.bak
+*.tmp
+*.log
