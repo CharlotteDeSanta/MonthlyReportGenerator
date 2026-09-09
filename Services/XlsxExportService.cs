@@ -114,6 +114,8 @@ public static class XlsxExportService
                 StyleRow(sheet, row, bold: false, fill: null, center: false, border: true);
                 foreach (var col in new[] { 1, 4, 5, 6, 7, 8 })
                     Center(sheet, row, col);
+                // 工作内容支持 Enter 换行（多行文本自动换行显示）
+                sheet.Cell(row, 3).Style.Alignment.WrapText = true;
                 break;
 
             case LineRole.SummaryTitle:

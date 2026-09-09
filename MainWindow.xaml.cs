@@ -2,20 +2,24 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using MonthlyReportGenerator.Models;
 using MonthlyReportGenerator.ViewModels;
 using Wpf.Ui.Controls;
 using DataGrid = System.Windows.Controls.DataGrid;
+using Button = System.Windows.Controls.Button;
 
 namespace MonthlyReportGenerator;
 
 public partial class MainWindow : FluentWindow
 {
+    private readonly MainViewModel _viewModel;
+
     public MainWindow()
     {
         InitializeComponent();
-        var viewModel = new MainViewModel();
-        DataContext = viewModel;
-        Closing += (_, _) => viewModel.Shutdown();
+        _viewModel = new MainViewModel();
+        DataContext = _viewModel;
+        Closing += (_, _) => _viewModel.Shutdown();
     }
 
     /// <summary>
@@ -30,6 +34,20 @@ public partial class MainWindow : FluentWindow
 
         if (sender is DataGrid grid)
             grid.BeginEdit(e);
+    }
+
+    /// <summary>
+    /// “×”按钮：第一次单击使该行进入编辑态，第二次单击触发清空该条记录的上/下班时间。
+    /// 清空采用整行替换方式，保证界面与汇总同步刷新。
+    /// </summary>
+    private void OnClearTimeClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button ||
+            button.DataContext is not DailyEntry entry ||
+            button.Tag is not string tag)
+            return;
+
+        _viewModel.ClearEntryTime(entry, tag == "start");
     }
 
     /// <summary>

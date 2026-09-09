@@ -70,11 +70,11 @@ public class MainViewModel : ObservableObject
     public int[] Months { get; } = Enumerable.Range(1, 12).ToArray();
     public EngineerLevel[] Levels { get; } = Enum.GetValues<EngineerLevel>();
 
-    /// 时间选择-小时列表（00–23，支持跨午夜班次；首位“—”用于清空）
-    public IReadOnlyList<string> HourOptions { get; } = new[] { "—" }.Concat(BuildRange(0, 23)).ToList();
+    /// 时间选择-小时列表（00–23，支持跨午夜班次；用列尾“×”按钮清空）
+    public IReadOnlyList<string> HourOptions { get; } = BuildRange(0, 23).ToList();
 
-    /// 时间选择-分钟列表（00–59，1 分钟一档，首位“—”用于清空）
-    public IReadOnlyList<string> MinuteOptions { get; } = new[] { "—" }.Concat(BuildRange(0, 59)).ToList();
+    /// 时间选择-分钟列表（00–59，1 分钟一档）
+    public IReadOnlyList<string> MinuteOptions { get; } = BuildRange(0, 59).ToList();
 
     private static List<string> BuildRange(int start, int end)
     {
@@ -137,7 +137,7 @@ public class MainViewModel : ObservableObject
         var today = DateOnly.FromDateTime(DateTime.Today);
         _year = today.Year;
         _month = today.Month;
-        Years = Enumerable.Range(today.Year - 1, 4).ToArray();
+        Years = Enumerable.Range(2026, 10).ToArray(); // 2026–2035
 
         ExportCsvCommand = new RelayCommand(() => Export(ExportFormat.Csv));
         ExportXlsxCommand = new RelayCommand(() => Export(ExportFormat.Xlsx));
@@ -352,6 +352,31 @@ public class MainViewModel : ObservableObject
         Days.Clear();
         for (var day = 1; day <= DateTime.DaysInMonth(Year, Month); day++)
             Attach(new DailyEntry { Date = new DateOnly(Year, Month, day) });
+
+        _isDirty = true;
+        RefreshSummary();
+    }
+
+    /// <summary>清空某条记录的上/下班时间：以整行替换方式刷新绑定，保证界面同步。</summary>
+    public void ClearEntryTime(DailyEntry entry, bool isStart)
+    {
+        var index = Days.IndexOf(entry);
+        if (index < 0) return;
+
+        var replacement = new DailyEntry
+        {
+            Date = entry.Date,
+            Location = entry.Location,
+            WorkContent = entry.WorkContent,
+        };
+        if (isStart)
+            replacement.EndTimeText = entry.EndTimeText;    // 保留下班时间
+        else
+            replacement.StartTimeText = entry.StartTimeText; // 保留上班时间
+
+        entry.PropertyChanged -= OnEntryChanged;
+        Days[index] = replacement;
+        replacement.PropertyChanged += OnEntryChanged;
 
         _isDirty = true;
         RefreshSummary();
