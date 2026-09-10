@@ -18,5 +18,6 @@ public enum LineRole
 /// <summary>
 /// 报表的一行。CSV 与 XLSX 两个渲染器消费同一份行序列，
 /// 从结构上保证两者内容完全一致。
+/// RestDay：该行是否为休息日（周末/法定节假日，补班日除外），XLSX 渲染时用于红底高亮。
 /// </summary>
-public sealed record ReportLine(LineRole Role, string[] Cells);
+public sealed record ReportLine(LineRole Role, string[] Cells, bool RestDay = false);

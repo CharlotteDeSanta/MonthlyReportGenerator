@@ -46,6 +46,14 @@ public static class XlsxExportService
             WriteCell(sheet, row, col + 1, line.Cells[col], GetNumberFormat(line.Role, col + 1));
 
         ApplyStyle(sheet, row, line.Role);
+
+        // 休息日（周末/法定节假日，补班日除外）：仅日期格标红
+        if (line.RestDay)
+        {
+            var style = sheet.Cell(row, 1).Style;
+            if (style is not null)
+                style.Fill.BackgroundColor = XLColor.FromHtml("#FEE2E2");
+        }
     }
 
     private static void WriteCell(IXLWorksheet sheet, int row, int col, string text, string? numberFormat)
