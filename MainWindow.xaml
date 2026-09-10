@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:MonthlyReportGenerator"
         Title="科烽智能AGV月报生成工具"
         Width="1280" Height="880"
         WindowStartupLocation="CenterScreen">
@@ -52,7 +53,8 @@
             </StackPanel>
 
             <!-- 整月明细表 -->
-            <ui:DataGrid x:Name="MainGrid" Grid.Row="2"
+            <controls:PerformanceDataGrid x:Name="MainGrid" Grid.Row="2"
+                         Style="{StaticResource {x:Type ui:DataGrid}}"
                          ItemsSource="{Binding Days}"
                          AutoGenerateColumns="False"
                          CanUserAddRows="False"
@@ -64,7 +66,7 @@
                          EnableRowVirtualization="False"
                          RowHeight="42"
                          PreviewMouseLeftButtonDown="OnDataGridPreviewMouseLeftButtonDown">
-                <ui:DataGrid.RowStyle>
+                <controls:PerformanceDataGrid.RowStyle>
                     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                         <Style.Triggers>
                             <!-- 周末/法定节假日（补班日除外）红底高亮，与原网页版一致 -->
@@ -74,8 +76,8 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </ui:DataGrid.RowStyle>
-                <ui:DataGrid.Columns>
+                </controls:PerformanceDataGrid.RowStyle>
+                <controls:PerformanceDataGrid.Columns>
                     <DataGridTextColumn Header="日期" IsReadOnly="True" Width="110"
                                         Binding="{Binding Date, StringFormat=yyyy-MM-dd, Mode=OneWay}" />
                     <DataGridTextColumn Header="星期" IsReadOnly="True" Width="60"
@@ -105,6 +107,20 @@
                     <DataGridTemplateColumn Header="上班时间" Width="204">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
+                                <!-- 显示态：轻量纯文本（避免常驻大量 ComboBox 导致弹层卡顿） -->
+                                <Grid>
+                                    <TextBlock Text="{Binding StartTimeText, Mode=OneWay}"
+                                               VerticalAlignment="Center" HorizontalAlignment="Left"
+                                               Margin="4,0" />
+                                    <Button Content="×" Width="24" Height="24" Padding="0" FontSize="14"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            Tag="start" Click="OnClearTimeClick" />
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <!-- 编辑态：小时/分钟下拉 + 清除按钮 -->
                                 <StackPanel Orientation="Horizontal">
                                     <ComboBox Width="78" Tag="start:09" GotKeyboardFocus="OnTimeComboFocus"
                                               ItemsSource="{Binding DataContext.HourOptions, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"
@@ -118,10 +134,22 @@
                                             Tag="start" Click="OnClearTimeClick" />
                                 </StackPanel>
                             </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="下班时间" Width="204">
                         <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBlock Text="{Binding EndTimeText, Mode=OneWay}"
+                                               VerticalAlignment="Center" HorizontalAlignment="Left"
+                                               Margin="4,0" />
+                                    <Button Content="×" Width="24" Height="24" Padding="0" FontSize="14"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            Tag="end" Click="OnClearTimeClick" />
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <ComboBox Width="78" Tag="end:17" GotKeyboardFocus="OnTimeComboFocus"
@@ -136,7 +164,7 @@
                                             Tag="end" Click="OnClearTimeClick" />
                                 </StackPanel>
                             </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="工作时长(h)" IsReadOnly="True" Width="104"
                                         Binding="{Binding WorkHours, StringFormat=0.00, Mode=OneWay}" />
@@ -144,8 +172,8 @@
                                         Binding="{Binding OvertimeHours, StringFormat=0.00, Mode=OneWay}" />
                     <DataGridTextColumn Header="项目出勤" IsReadOnly="True" Width="84"
                                         Binding="{Binding ProjectAttendance, StringFormat=0.00, Mode=OneWay}" />
-                </ui:DataGrid.Columns>
-            </ui:DataGrid>
+                </controls:PerformanceDataGrid.Columns>
+            </controls:PerformanceDataGrid>
 
             <!-- 底部：统计表格 + 提示 -->
             <StackPanel Grid.Row="3" Margin="0,8,0,0">
