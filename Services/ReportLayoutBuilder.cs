@@ -38,7 +38,7 @@ public static class ReportLayoutBuilder
                 d.EndTimeText,
                 d.WorkHours.ToString("0.00", CultureInfo.InvariantCulture),
                 d.OvertimeHours.ToString("0.00", CultureInfo.InvariantCulture),
-                d.ProjectAttendance.ToString("0.00", CultureInfo.InvariantCulture))), d.IsRestDay);
+                d.ProjectAttendance.ToString("0.00", CultureInfo.InvariantCulture)), d.IsRestDay));
         }
 
         lines.Add(new ReportLine(LineRole.Separator, EmptyRow()));
