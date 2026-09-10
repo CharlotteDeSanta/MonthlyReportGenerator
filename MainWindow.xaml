@@ -40,7 +40,7 @@
                 <TextBox Width="110" Margin="6,0,18,0"
                          Text="{Binding EmployeeName, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBlock Text="工程师等级" VerticalAlignment="Center" />
-                <ComboBox Width="120" Margin="6,0,18,0"
+                <ComboBox x:Name="LevelCombo" Width="120" Margin="6,0,18,0"
                           ItemsSource="{Binding Levels}" SelectedItem="{Binding Level}" />
                 <TextBlock Text="{Binding TitlePreview}" VerticalAlignment="Center" FontWeight="Bold" />
             </StackPanel>
@@ -107,20 +107,7 @@
                     <DataGridTemplateColumn Header="上班时间" Width="204">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <!-- 显示态：轻量纯文本（避免常驻大量 ComboBox 导致弹层卡顿） -->
-                                <Grid>
-                                    <TextBlock Text="{Binding StartTimeText, Mode=OneWay}"
-                                               VerticalAlignment="Center" HorizontalAlignment="Left"
-                                               Margin="4,0" />
-                                    <Button Content="×" Width="24" Height="24" Padding="0" FontSize="14"
-                                            HorizontalAlignment="Right" VerticalAlignment="Center"
-                                            Tag="start" Click="OnClearTimeClick" />
-                                </Grid>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <!-- 编辑态：小时/分钟下拉 + 清除按钮 -->
+                                <!-- 下拉框常驻：单击即可直接命中并展开（预热 + AutomationPeer 禁用负责性能） -->
                                 <StackPanel Orientation="Horizontal">
                                     <ComboBox Width="78" Tag="start:09" GotKeyboardFocus="OnTimeComboFocus"
                                               ItemsSource="{Binding DataContext.HourOptions, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"
@@ -134,22 +121,10 @@
                                             Tag="start" Click="OnClearTimeClick" />
                                 </StackPanel>
                             </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="下班时间" Width="204">
                         <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <TextBlock Text="{Binding EndTimeText, Mode=OneWay}"
-                                               VerticalAlignment="Center" HorizontalAlignment="Left"
-                                               Margin="4,0" />
-                                    <Button Content="×" Width="24" Height="24" Padding="0" FontSize="14"
-                                            HorizontalAlignment="Right" VerticalAlignment="Center"
-                                            Tag="end" Click="OnClearTimeClick" />
-                                </Grid>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
                                     <ComboBox Width="78" Tag="end:17" GotKeyboardFocus="OnTimeComboFocus"
@@ -164,7 +139,7 @@
                                             Tag="end" Click="OnClearTimeClick" />
                                 </StackPanel>
                             </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="工作时长(h)" IsReadOnly="True" Width="104"
                                         Binding="{Binding WorkHours, StringFormat=0.00, Mode=OneWay}" />
