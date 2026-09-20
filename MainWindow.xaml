@@ -9,17 +9,8 @@
         WindowStartupLocation="CenterScreen">
 
     <ui:FluentWindow.Resources>
-        <!-- 按 ViewModel 类型映射页面视图（ContentControl 懒加载：切到才实例化） -->
-        <DataTemplate DataType="{x:Type vm:MonthlyReportViewModel}">
-            <views:MonthlyReportView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:DailyReportViewModel}">
-            <views:DailyReportView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:WeeklyReportViewModel}">
-            <views:WeeklyReportView />
-        </DataTemplate>
         <vm:EqualsToBoolConverter x:Key="TabEquals" />
+        <vm:EqualsToVisibilityConverter x:Key="TabToVisibility" />
         <!-- 原生 ToggleButton 的标签样式（WPF-UI 无 ToggleButton 控件） -->
         <Style TargetType="ToggleButton">
             <Setter Property="MinWidth" Value="88" />
@@ -78,8 +69,15 @@
                               IsChecked="{Binding SelectedTab, Converter={StaticResource TabEquals}, ConverterParameter=2}" />
             </StackPanel>
 
-            <!-- 页面容器（按 CurrentPage 类型解析视图） -->
-            <ContentControl Grid.Row="2" Content="{Binding CurrentPage}" />
+            <!-- 三个页面视图常驻（仅切换 Visibility，避免每次切换重建视觉树） -->
+            <Grid Grid.Row="2">
+                <views:MonthlyReportView DataContext="{Binding MonthlyPage}"
+                                         Visibility="{Binding DataContext.SelectedTab, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource TabToVisibility}, ConverterParameter=0}" />
+                <views:DailyReportView DataContext="{Binding DailyPage}"
+                                       Visibility="{Binding DataContext.SelectedTab, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource TabToVisibility}, ConverterParameter=1}" />
+                <views:WeeklyReportView DataContext="{Binding WeeklyPage}"
+                                        Visibility="{Binding DataContext.SelectedTab, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource TabToVisibility}, ConverterParameter=2}" />
+            </Grid>
         </Grid>
     </Grid>
 </ui:FluentWindow>
