@@ -1,0 +1,151 @@
+<UserControl x:Class="MonthlyReportGenerator.Views.WeeklyReportView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:controls="clr-namespace:MonthlyReportGenerator">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 元信息区（未完成项与填表日期换行显示） -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,8">
+            <WrapPanel VerticalAlignment="Center">
+                <TextBlock Text="年份" VerticalAlignment="Center" />
+                <ComboBox Width="90" Margin="6,0,18,0"
+                          ItemsSource="{Binding Years}" SelectedItem="{Binding Year}" />
+                <TextBlock Text="周数" VerticalAlignment="Center" />
+                <ComboBox Width="80" Margin="6,0,18,0"
+                          ItemsSource="{Binding Weeks}" SelectedItem="{Binding Week}" />
+                <TextBlock Text="{Binding WeekRangeText}" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,18,0" />
+                <TextBlock Text="项目名称" VerticalAlignment="Center" />
+                <TextBox Width="160" Margin="6,0,18,0"
+                         Text="{Binding Meta.ProjectName, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="填写人" VerticalAlignment="Center" />
+                <TextBox Width="100" Margin="6,0,18,0"
+                         Text="{Binding Meta.Writer, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="是否按上周计划完成" VerticalAlignment="Center" />
+                <ComboBox Width="64" Margin="6,0,18,0"
+                          ItemsSource="{Binding YesNoOptions}"
+                          SelectedItem="{Binding FollowedLastPlanText}" />
+            </WrapPanel>
+            <WrapPanel Margin="0,6,0,0" VerticalAlignment="Center">
+                <TextBlock Text="未完成项" VerticalAlignment="Center" />
+                <TextBox Width="260" Margin="6,0,18,0"
+                         Text="{Binding Meta.Unfinished, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="填表日期" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding ReportDateText}" VerticalAlignment="Center" Margin="6,0,0,0" FontWeight="Bold" />
+            </WrapPanel>
+        </StackPanel>
+
+        <!-- 工具栏 -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <ui:Button Content="导出 XLSX" Command="{Binding ExportCommand}" Appearance="Primary" />
+            <ui:Button Content="清空表单" Command="{Binding ClearCommand}" Appearance="Danger" Margin="8,0,0,0" />
+        </StackPanel>
+
+        <!-- 本周/下周明细 -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="本周工作总结" FontWeight="Bold" Margin="0,0,0,4" />
+                <controls:PerformanceDataGrid Style="{StaticResource {x:Type ui:DataGrid}}"
+                             ItemsSource="{Binding ThisWeek}"
+                             AutoGenerateColumns="False"
+                             CanUserAddRows="False" CanUserDeleteRows="False"
+                             CanUserSortColumns="False"
+                             HeadersVisibility="Column"
+                             GridLinesVisibility="All"
+                             SelectionUnit="Cell"
+                             EnableRowVirtualization="False"
+                             RowHeight="42"
+                             Height="340"
+                             PreviewMouseLeftButtonDown="OnDataGridPreviewMouseLeftButtonDown">
+                    <controls:PerformanceDataGrid.Columns>
+                        <DataGridTextColumn Header="星期" IsReadOnly="True" Width="100"
+                                            Binding="{Binding DateDisplay, Mode=OneWay}" />
+                        <DataGridTextColumn Header="类别" Width="90"
+                                            Binding="{Binding Category, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTemplateColumn Header="工作内容" Width="*" MinWidth="220">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Content, Mode=OneWay}"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" Margin="2,0" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}"
+                                             AcceptsReturn="True" TextWrapping="Wrap"
+                                             VerticalScrollBarVisibility="Auto" MinHeight="40" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="阶段要点" Width="140"
+                                            Binding="{Binding StagePoints, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="需要协调的内容" Width="140"
+                                            Binding="{Binding Coordination, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="计划完成时间" Width="100"
+                                            Binding="{Binding PlanFinishDate, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="进度状态" Width="80"
+                                            Binding="{Binding Progress, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="备注" Width="110"
+                                            Binding="{Binding Remark, UpdateSourceTrigger=PropertyChanged}" />
+                    </controls:PerformanceDataGrid.Columns>
+                </controls:PerformanceDataGrid>
+
+                <TextBlock Text="下周工作计划" FontWeight="Bold" Margin="0,12,0,4" />
+                <controls:PerformanceDataGrid Style="{StaticResource {x:Type ui:DataGrid}}"
+                             ItemsSource="{Binding NextWeek}"
+                             AutoGenerateColumns="False"
+                             CanUserAddRows="False" CanUserDeleteRows="False"
+                             CanUserSortColumns="False"
+                             HeadersVisibility="Column"
+                             GridLinesVisibility="All"
+                             SelectionUnit="Cell"
+                             EnableRowVirtualization="False"
+                             RowHeight="42"
+                             Height="340"
+                             PreviewMouseLeftButtonDown="OnDataGridPreviewMouseLeftButtonDown">
+                    <controls:PerformanceDataGrid.Columns>
+                        <DataGridTextColumn Header="星期" IsReadOnly="True" Width="100"
+                                            Binding="{Binding DateDisplay, Mode=OneWay}" />
+                        <DataGridTextColumn Header="类别" Width="90"
+                                            Binding="{Binding Category, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTemplateColumn Header="工作内容" Width="*" MinWidth="220">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Content, Mode=OneWay}"
+                                               TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" Margin="2,0" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}"
+                                             AcceptsReturn="True" TextWrapping="Wrap"
+                                             VerticalScrollBarVisibility="Auto" MinHeight="40" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="阶段要点" Width="140"
+                                            Binding="{Binding StagePoints, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="需要协调的内容" Width="140"
+                                            Binding="{Binding Coordination, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="计划完成时间" Width="100"
+                                            Binding="{Binding PlanFinishDate, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="进度状态" Width="80"
+                                            Binding="{Binding Progress, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridTextColumn Header="备注" Width="110"
+                                            Binding="{Binding Remark, UpdateSourceTrigger=PropertyChanged}" />
+                    </controls:PerformanceDataGrid.Columns>
+                </controls:PerformanceDataGrid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="3" Text="{Binding NoticeText}" Foreground="#E8A33D" Margin="0,6,0,0" />
+    </Grid>
+</UserControl>

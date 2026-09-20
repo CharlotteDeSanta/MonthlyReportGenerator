@@ -1,6 +1,6 @@
 # 科烽智能 AGV 月报生成工具（MonthlyReportGenerator）
 
-Windows 桌面端：按天填写 AGV 项目工作月报，自动计算工时、加班、项目出勤与月度汇总，一键导出 **CSV / XLSX**（两者内容完全一致）。用于替代原网页版月报填写系统，仅供公司内部分发使用。
+Windows 桌面端：按天填写 AGV 项目工作月报，自动计算工时、加班、项目出勤与月度汇总，一键导出 **XLSX**。用于替代原网页版月报填写系统，仅供公司内部分发使用。
 
 ## 功能特性
 
@@ -11,7 +11,7 @@ Windows 桌面端：按天填写 AGV 项目工作月报，自动计算工时、�
 - **法定节假日/补班日**支持：内置 2025/2026 年数据，其余年份启动时自动联网刷新（timor.tech）并本地缓存，断网时回退缓存或"仅周末"规则；
 - 周末/法定节假日行红色高亮；时间输入聚焦时自动预填 09:00 / 17:00；
 - 草稿按"年-月"自动保存，姓名/工程师等级跨月记忆；
-- 导出：布局构建与产物输出解耦，CSV（UTF-8 带 BOM）与 XLSX（带样式）由同一布局构建器生成，**内容完全一致**，默认文件名 `AGV月报_{姓名}_{年}_{月}.{扩展名}`；
+- 导出：布局构建与产物输出解耦，XLSX（带样式）由统一布局构建器生成，默认文件名 `AGV月报_{姓名}_{年}_{月}.xlsx`；
 - 单文件发布（框架依赖），双击即运行，免安装。
 
 ## 业务规则（与张工网页版月报系统一致）
@@ -47,7 +47,6 @@ Windows 桌面端：按天填写 AGV 项目工作月报，自动计算工时、�
 | .NET 10（`net10.0-windows`） | 目标框架（LTS） |
 | WPF + [WPF-UI 4.x](https://github.com/lepoco/wpfui) | Fluent / Win11 风格控件（MIT） |
 | [ClosedXML](https://github.com/ClosedXML/ClosedXML) | XLSX 导出（MIT） |
-| [CsvHelper](https://joshclose.github.io/CsvHelper/) | CSV 导出（Apache-2.0） |
 | System.Text.Json | 草稿/配置/节假日缓存 |
 
 ## 环境要求
@@ -73,7 +72,7 @@ dotnet publish -c Release -p:PublishSingleFile=true --self-contained false -o .\
 ```
 MonthlyReportGenerator/
 ├─ Models/          # 数据模型与业务规则（DailyEntry 派生计算、WorkCalendar 节假日）
-├─ Services/        # 报表布局构建、CSV/XLSX 渲染、导出编排、草稿、节假日加载
+├─ Services/        # 报表布局构建、XLSX 渲染、导出编排、草稿、节假日加载
 ├─ ViewModels/      # MainViewModel（表单状态、汇总、导出/清空命令）
 ├─ Assets/          # 应用图标（app.ico / app.png）
 ├─ ExampleFiles/    # 样例报表与"原AGV月报生成系统.html"（黄金基准）
@@ -109,4 +108,4 @@ MonthlyReportGenerator/
 
 ## 许可证
 
-本项目以 [GNU GPL v3](LICENSE.txt) 发布。依赖库许可：WPF-UI（MIT）、ClosedXML（MIT）、CsvHelper（Apache-2.0），均与 GPL v3 兼容。
+本项目以 [GNU GPL v3](LICENSE.txt) 发布。依赖库许可：WPF-UI（MIT）、ClosedXML（MIT），均与 GPL v3 兼容。

@@ -1,57 +1,16 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
-using Microsoft.Win32;
 using MonthlyReportGenerator.Models;
 using MonthlyReportGenerator.Services;
 
 namespace MonthlyReportGenerator.ViewModels;
 
-public abstract class ObservableObject : INotifyPropertyChanged
+public class MonthlyReportViewModel : ObservableObject
 {
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-    protected bool Set<T>(ref T field, T value, [CallerMemberName] string? name = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(name);
-        return true;
-    }
-}
-
-public sealed class RelayCommand : ICommand
-{
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
-
-    public RelayCommand(Action execute, Func<bool>? canExecute = null)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
-
-    public event EventHandler? CanExecuteChanged;
-
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-
-    public void Execute(object? parameter) => _execute();
-
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-}
-
-/// 底部统计表格的一行（指标名 + 显示值）
-public sealed record SummaryItem(string Name, string Value);
-
-public class MainViewModel : ObservableObject
-{
+    private readonly ProfileViewModel _profile;
     private readonly DispatcherTimer _saveTimer;
     private (int Year, int Month) _loaded = (0, 0);
     private string _notice = "";
@@ -60,20 +19,19 @@ public class MainViewModel : ObservableObject
 
     public ObservableCollection<DailyEntry> Days { get; } = new();
 
-    /// 底部“月度汇总统计”表格行
+    /// <summary>底部“月度汇总统计”表格行。</summary>
     public ObservableCollection<SummaryItem> SummaryRows { get; } = new();
 
-    /// 底部“项目地点汇总”表格行
+    /// <summary>底部“项目地点汇总”表格行。</summary>
     public ObservableCollection<LocationSummaryRow> LocationSummaries { get; } = new();
 
     public int[] Years { get; }
     public int[] Months { get; } = Enumerable.Range(1, 12).ToArray();
-    public EngineerLevel[] Levels { get; } = Enum.GetValues<EngineerLevel>();
 
-    /// 时间选择-小时列表（00–23，支持跨午夜班次；用列尾“×”按钮清空）
+    /// <summary>时间选择-小时列表（00–23，支持跨午夜班次；用列尾“×”按钮清空）。</summary>
     public IReadOnlyList<string> HourOptions { get; } = BuildRange(0, 23).ToList();
 
-    /// 时间选择-分钟列表（00–59，1 分钟一档）
+    /// <summary>时间选择-分钟列表（00–59，1 分钟一档）。</summary>
     public IReadOnlyList<string> MinuteOptions { get; } = BuildRange(0, 59).ToList();
 
     private static List<string> BuildRange(int start, int end)
@@ -98,27 +56,6 @@ public class MainViewModel : ObservableObject
         set { if (Set(ref _month, value)) OnYearOrMonthChanged(); }
     }
 
-    private string _employeeName = "";
-    public string EmployeeName
-    {
-        get => _employeeName;
-        set
-        {
-            if (Set(ref _employeeName, value))
-            {
-                OnPropertyChanged(nameof(TitlePreview));
-                SaveProfileNow();
-            }
-        }
-    }
-
-    private EngineerLevel _level = EngineerLevel.新进工程师;
-    public EngineerLevel Level
-    {
-        get => _level;
-        set { if (Set(ref _level, value)) SaveProfileNow(); }
-    }
-
     public string TitlePreview => $"{Year}年AGV项目工作月报";
 
     private string _warningText = "";
@@ -128,27 +65,19 @@ public class MainViewModel : ObservableObject
         private set => Set(ref _warningText, value);
     }
 
-    public ICommand ExportCsvCommand { get; }
-    public ICommand ExportXlsxCommand { get; }
+    public ICommand ExportCommand { get; }
     public ICommand ClearCommand { get; }
 
-    public MainViewModel()
+    public MonthlyReportViewModel(ProfileViewModel profile)
     {
+        _profile = profile;
         var today = DateOnly.FromDateTime(DateTime.Today);
         _year = today.Year;
         _month = today.Month;
         Years = Enumerable.Range(2026, 10).ToArray(); // 2026–2035
 
-        ExportCsvCommand = new RelayCommand(() => Export(ExportFormat.Csv));
-        ExportXlsxCommand = new RelayCommand(() => Export(ExportFormat.Xlsx));
+        ExportCommand = new RelayCommand(Export);
         ClearCommand = new RelayCommand(ClearAll);
-
-        var profile = DraftService.LoadProfile();
-        if (profile is not null)
-        {
-            _employeeName = profile.EmployeeName;
-            _level = profile.Level;
-        }
 
         ReloadMonth();
         _ = EnsureHolidaysAsync();
@@ -168,7 +97,7 @@ public class MainViewModel : ObservableObject
         _ = EnsureHolidaysAsync();
     }
 
-    /// 确保当年节假日数据可用（内置表→本地缓存→网络），加载后刷新行内派生值与汇总
+    /// <summary>确保当年节假日数据可用（内置表→本地缓存→网络），加载后刷新行内派生值与汇总。</summary>
     private async Task EnsureHolidaysAsync()
     {
         var year = Year;
@@ -261,8 +190,8 @@ public class MainViewModel : ObservableObject
     private List<string> GetValidationErrors()
     {
         var errors = new List<string>();
-        if (string.IsNullOrWhiteSpace(EmployeeName))
-            errors.Add("请填写姓名");
+        if (string.IsNullOrWhiteSpace(_profile.EmployeeName))
+            errors.Add("请在窗口顶部填写姓名");
 
         var invalidDates = Days
             .Where(d => d.HasInvalidTime)
@@ -278,11 +207,11 @@ public class MainViewModel : ObservableObject
     {
         Year = Year,
         Month = Month,
-        EmployeeName = EmployeeName.Trim(),
-        Level = Level,
+        EmployeeName = _profile.EmployeeName.Trim(),
+        Level = _profile.Level,
     };
 
-    private void Export(ExportFormat format)
+    private void Export()
     {
         var errors = GetValidationErrors();
         if (errors.Count > 0)
@@ -293,48 +222,9 @@ public class MainViewModel : ObservableObject
         }
 
         var meta = BuildMeta();
-        var dialog = new SaveFileDialog
-        {
-            Title = format == ExportFormat.Csv ? "导出 CSV" : "导出 XLSX",
-            Filter = format == ExportFormat.Csv
-                ? "CSV 文件 (*.csv)|*.csv"
-                : "Excel 工作簿 (*.xlsx)|*.xlsx",
-            FileName = ReportExporter.DefaultFileName(meta, format),
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-        };
-        if (dialog.ShowDialog() != true) return;
-
-        try
-        {
-            SaveProfileNow();
-            SaveDraftNow();
-            ReportExporter.Export(meta, Days.ToList(), format, dialog.FileName);
-            MessageBox.Show($"已导出：{dialog.FileName}", "导出成功",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        catch (Exception ex)
-        {
-            // 完整异常写入日志文件，便于定位（弹窗不可复制）
-            try
-            {
-                var logFolder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "MonthlyReportGenerator");
-                Directory.CreateDirectory(logFolder);
-                var logPath = Path.Combine(logFolder, "export-error.log");
-                File.AppendAllText(logPath,
-                    $"==== {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===={Environment.NewLine}{ex}{Environment.NewLine}{Environment.NewLine}");
-
-                MessageBox.Show(
-                    $"导出失败：{ex.Message}{Environment.NewLine}{Environment.NewLine}详细信息已写入：{logPath}",
-                    "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch
-            {
-                MessageBox.Show($"导出失败：{ex.Message}", "错误",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+        SaveDraftNow();
+        ExportHelper.ExportWithDialog(ReportExporter.DefaultFileName(meta),
+            path => ReportExporter.Export(meta, Days.ToList(), path));
     }
 
     // ---------------- 清空与保存 ----------------
@@ -389,15 +279,6 @@ public class MainViewModel : ObservableObject
         _isDirty = false;
     }
 
-    private void SaveProfileNow()
-    {
-        DraftService.SaveProfile(new ProfileData { EmployeeName = EmployeeName, Level = Level });
-    }
-
-    /// 窗口关闭时调用：保存草稿与配置
-    public void Shutdown()
-    {
-        SaveDraftNow();
-        SaveProfileNow();
-    }
+    /// <summary>窗口关闭时调用：保存草稿。</summary>
+    public void Shutdown() => SaveDraftNow();
 }

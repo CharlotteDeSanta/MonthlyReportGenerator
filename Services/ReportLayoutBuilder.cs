@@ -4,9 +4,9 @@ using MonthlyReportGenerator.Models;
 namespace MonthlyReportGenerator.Services;
 
 /// <summary>
-/// 把（元信息 + 整月明细）构建成统一的报表行序列，结构与示例 CSV 完全一致：
+/// 把（元信息 + 整月明细）构建成统一的报表行序列，结构与示例一致：
 /// 标题 → 元信息 → 明细表头 → 28~31 行明细 → 空行 → 月度汇总统计 → 空行 → 项目地点汇总。
-/// CSV 与 XLSX 渲染器共享同一份行序列，保证两者内容一致。
+/// XLSX 渲染器消费这份行序列。
 /// </summary>
 public static class ReportLayoutBuilder
 {
