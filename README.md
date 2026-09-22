@@ -8,18 +8,19 @@ Windows 桌面端：**月报 / 日报 / 周报**三合一填报工具，自动�
 
 | 页面 | 内容 |
 |---|---|
-| **月报**（AGV 项目工作月报） | 整月明细（每天一行，含星期提示）；上下班时间用"小时 + 分钟"下拉选择（支持跨午夜班次）；自动计算工作时长、加班、项目出勤；底部实时显示六项月度汇总与项目地点汇总 |
-| **日报**（实施记录日报） | 整月组织（每天两行：今日完成 / 明日计划）；多行文本编辑（Enter 换行）；技术负责人/实施人员默认取公共区姓名 |
+| **月报**（AGV 项目工作月报） | 整月明细（每天一行，含星期提示）；上下班时间用"小时 + 分钟"下拉选择，支持跨午夜班次；自动计算工作时长、加班、项目出勤；底部实时显示六项月度汇总与项目地点汇总 |
+| **日报**（实施记录日报） | 整月组织，每天两行（今日完成 / 明日计划）；多行文本编辑（Enter 换行）；技术负责人 / 实施人员默认取公共区姓名 |
 | **周报**（周工作总结计划） | 按 ISO 周组织（周一开头）；本周工作总结 / 下周工作计划各 7 行明细 + 元信息（项目名称、填写人、是否按上周计划完成、未完成项、填表日期） |
 
 ### 公共能力
 
-- **全自动计算**（月报）：工作时长（下班−上班，跨午夜 +24h）、加班时长（8 小时制/周末与节假日全时长/混合调休超 4h）、项目出勤、六项月度汇总、项目地点汇总；
-- 上班地点规则：`公司` / `项目名` / `调休` / `休息` 及组合 `公司/项目名`、`调休/项目名`；
-- **法定节假日/补班日**：内置 2025/2026 年数据，其余年份启动时自动联网刷新（timor.tech）并本地缓存，断网回退缓存；**三级降级全部落空时显式红色告警并禁止导出**（避免把按"仅周末"错算的加班数据交付）；
-- 周末/法定节假日行红色高亮；时间输入聚焦时自动预填 09:00 / 17:00；时间可单击展开、单行独立清空；
-- 草稿按报表类型独立自动保存（10 秒落盘 + 切换/导出/关闭时保存），写入采用"临时文件 + 原子替换"，保存失败会在界面告警；崩溃/关闭前强制落盘；单实例运行，避免多开互相覆盖草稿；姓名/工程师等级在窗口公共区，三个页面共享并跨月记忆；
-- **导出**：布局构建与产物输出解耦，XLSX（带样式、单元格合并与模板一致）由统一渲染管线生成；渲染在线程池执行，导出期间界面不卡顿并显示"正在导出"提示；
+- **全自动计算**（月报）：工作时长、加班时长、项目出勤、六项月度汇总、项目地点汇总，规则见下节；
+- 上班地点支持 `公司` / `项目名` / `调休` / `休息` 及其组合 `公司/项目名`、`调休/项目名`；
+- **法定节假日 / 补班日**：内置 2025/2026 年数据，其余年份启动与切换年份时联网刷新（timor.tech）并本地缓存，断网回退缓存；**内置、缓存、联网三级全部落空时显式红色告警并禁用导出**，避免把按"仅周末"错算的加班数据交付；
+- 周末与法定节假日行红底高亮；时间下拉获得焦点且为空时自动预填 09:00 / 17:00；时间可单击展开、单行独立清空；
+- 草稿按报表类型独立自动保存（10 秒节流 + 切换 / 导出 / 关闭时保存），写入采用"临时文件 + 同卷原子替换"，保存失败会在界面告警并记入日志；崩溃或关闭前强制落盘；
+- 姓名与工程师等级位于窗口公共区，三个页面共享并跨月记忆；
+- **导出**：布局构建与产物输出解耦，XLSX（带样式、单元格合并，与模板一致）由统一渲染管线生成；渲染在线程池执行，导出期间界面不卡顿并显示"正在导出"提示；
 - 单文件发布（框架依赖），双击即运行，免安装。
 
 ## 月报业务规则（与原网页版系统一致）
@@ -48,23 +49,20 @@ Windows 桌面端：**月报 / 日报 / 周报**三合一填报工具，自动�
 | 当月已调休天数(天) | 仅工作日统计：纯调休/休息 +1，混合调休 +0.5 |
 | 项目地点汇总 | 取每行第一个项目名，出勤与加班全额计入；按项目名升序排列 |
 
-## 日报 / 周报结构
-
-- **日报**：5 列（日期｜完成/计划｜每日完成内容｜项目技术负责人｜项目实施人员），每天两行（今日完成/明日计划），日期与人员列跨两行合并，与公司日报 Excel 模板一致；
-- **周报**：8 列（类别｜星期｜工作内容｜阶段要点｜需要协调的内容｜计划完成时间｜进度状态｜备注），"本周/下周工作总结"标签在首列跨 7 行合并，与公司周报 Excel 模板一致。
-
 ## 技术栈
 
 | 组件 | 说明 |
 |---|---|
-| .NET 10（`net10.0-windows`） | 目标框架（LTS） |
-| WPF + [WPF-UI 4.x](https://github.com/lepoco/wpfui) | Fluent / Win11 风格控件（MIT） |
-| [ClosedXML](https://github.com/ClosedXML/ClosedXML) | XLSX 导出（MIT） |
-| System.Text.Json | 草稿/配置/节假日缓存 |
+| .NET 10（`net10.0-windows`） | 目标框架 |
+| WPF + [WPF-UI 4.3](https://github.com/lepoco/wpfui) | Fluent / Win11 风格控件（MIT） |
+| [ClosedXML 0.105](https://github.com/ClosedXML/ClosedXML) | XLSX 导出（MIT） |
+| System.Text.Json | 草稿 / 配置 / 节假日缓存 |
+
+架构为手写 MVVM（无第三方 MVVM 框架）：`Views → ViewModels → Services → Models` 单向依赖，命令与通知基类在 `ViewModels\Infrastructure.cs`。
 
 ## 环境要求
 
-- **开发**：Windows 11、Visual Studio 2026（".NET 桌面开发"工作负载）、.NET 10 SDK；
+- **开发**：Windows 11、.NET 10 SDK、Visual Studio 2026（".NET 桌面开发"工作负载）；
 - **运行**：Windows 11 + **.NET Desktop Runtime 10.x**（主版本必须为 10；ARM 设备需 arm64 版）。
 
 ## 构建与发布
@@ -73,27 +71,39 @@ Windows 桌面端：**月报 / 日报 / 周报**三合一填报工具，自动�
 # 调试构建
 dotnet build
 
-# 单文件发布（框架依赖，产物约 16MB 的单个 exe）
-dotnet publish -c Release -p:PublishSingleFile=true --self-contained false -o .\publish
+# 发布（csproj 已配置单文件、框架依赖、不生成 pdb）
+dotnet publish -c Release -o .\publish
 ```
 
-- 产物：`publish\MonthlyReportGenerator.exe`，双击即运行；
+- 产物：`publish\MonthlyReportGenerator.exe` 单个文件，实测约 16 MB，双击即运行；
 - 目标机需预装 .NET Desktop Runtime 10；
-- 编译的exe没有签名，所以微软Windows defender可能会报不信任，点击信任即可；
+- exe 未签名，Windows Defender 可能提示不信任，点击信任即可。
 
 ## 项目结构
 
 ```
 MonthlyReportGenerator/
-├─ Models/            # 数据模型与业务规则（DailyEntry/WorkCalendar/WeekHelper/日报周报条目）
-├─ Services/          # 三类报表布局构建、XLSX 渲染、导出编排、草稿、节假日加载
-├─ ViewModels/        # ShellViewModel（标签壳）、ProfileViewModel（共享姓名/等级）、月报/日报/周报页面 VM、ExportHelper、Infrastructure（命令/通知基类）
-├─ Views/             # MonthlyReportView / DailyReportView / WeeklyReportView
-├─ Assets/            # 应用图标（app.ico / app.png）
-├─ ExampleFiles/      # 样例报表与"原AGV月报生成系统.html"（黄金基准）
-├─ PerformanceDataGrid.cs  # 禁用 AutomationPeer 的表格（规避 dotnet/wpf #5807/#9881 性能问题）
-├─ MainWindow.xaml    # 主窗口：标题栏 + 公共区（姓名/等级）+ 三个标签 + 页面容器
-└─ MonthlyReportGenerator.csproj
+├─ App.xaml / App.xaml.cs   # 启动入口：单实例互斥、全局异常兜底、退出前强制落盘
+├─ MainWindow.xaml          # 主窗口：标题栏 + 公共区（姓名/等级）+ 三个标签 + 页面容器
+├─ PerformanceDataGrid.cs   # 禁用 AutomationPeer 的表格（规避 dotnet/wpf #5807/#9881）
+├─ Models/                  # 数据模型与业务规则（DailyEntry 派生计算、WorkCalendar、WeekHelper、日报/周报条目、ReportLine）
+├─ Services/                # 三类报表布局构建、XLSX 渲染、导出编排、草稿存取、节假日加载
+├─ ViewModels/              # ShellViewModel（标签壳）、ProfileViewModel（共享姓名/等级）、三个页面 VM、ExportHelper、Infrastructure（命令/通知基类）
+├─ Views/                   # MonthlyReportView / DailyReportView / WeeklyReportView
+├─ Assets/                  # 应用图标（app.ico / app.png）
+└─ ExampleFiles/            # 样例报表与"原AGV月报生成系统.html"（黄金基准）
+```
+
+设计要点：三类报表各自把数据编译成统一的 `ReportLine` 行序列（角色 + 单元格 + 合并指令），`XlsxExportService` 只消费该序列，因此新增报表类型无需改动渲染器。
+
+性能处理：主表格禁用 AutomationPeer 以规避 WPF 首次弹出下拉时强制创建整树 AutomationPeer 的卡顿；启动时预热一次下拉并预构建日报/周报页面；月报表格关闭行虚拟化以保证时间下拉常驻。
+
+## 版本管理
+
+版本以 git tag 与 GitHub Release 发布，不在源码中维护版本号；查看已发布版本：
+
+```powershell
+git ls-remote --tags origin
 ```
 
 ## 本地数据存储
@@ -106,21 +116,20 @@ MonthlyReportGenerator/
 | `draft-{年}-{月}.json` | 月报草稿 |
 | `draft-daily-{年}-{月}.json` | 日报草稿 |
 | `draft-weekly-{年}-W{周}.json` | 周报草稿（ISO 周） |
-| `holidays-{年}.json` | 节假日数据缓存（网络刷新成功后写入） |
+| `holidays-{年}.json` | 节假日数据缓存（联网刷新成功后写入） |
+| `export-error.log` | 导出异常、草稿保存失败与崩溃的完整堆栈（追加写入） |
 
 ## 节假日数据说明
 
 1. 2025/2026 年内置于 `Models\WorkCalendar.cs`；
-2. 其他年份：启动及切换年份时尝试从 `https://timor.tech/api/holiday/year/{year}` 刷新并缓存；失败则回退本地缓存；
-3. 若既非内置、又无缓存、又无法联网，则**不静默降级**：界面显示红色告警，并在数据补齐前禁用导出（该年加班时长与项目出勤会按"仅周末"错算）；
+2. 其他年份：启动及切换年份时尝试从 `https://timor.tech/api/holiday/year/{year}` 刷新并缓存，失败则回退本地缓存；
+3. 若既非内置、又无缓存、又无法联网，则**不静默降级**：界面显示红色告警并禁用导出（该年加班时长与项目出勤会按"仅周末"错算，例如国庆节会被当成工作日）；
 4. 内网无法访问该域名时，可每年发布前在 `WorkCalendar` 内置表中手动补充。
 
 ## 已知限制与说明
 
-- 法定节假日数据依赖外部 API（2025/2026 已内置，2027+ 待发布）；缺失时程序会告警并禁止导出，需联网或由维护人员补入内置表后方可导出；
-- 同一时间只允许运行一个实例（重复启动会被拒绝），以避免两个窗口覆盖同一份草稿；
 - 上班地点暂无历史项目名自动补全；周报"进度状态"为自由文本；
-- 主表格禁用了 AutomationPeer（规避 WPF 弹层性能问题 dotnet/wpf #5807/#9881），因此**屏幕阅读器无法朗读表格内容**——内部工具场景无影响；
+- 主表格禁用 AutomationPeer 导致**屏幕阅读器无法朗读表格内容**——内部工具场景无影响；
 - 应用图标为程序生成的占位图，可随时替换 `Assets\app.ico` / `Assets\app.png`。
 
 ## 许可证
