@@ -95,6 +95,39 @@ public class ShellViewModel : ObservableObject
         _weekly?.Shutdown();
         Profile.Save();
     }
+
+    /// <summary>
+    /// 崩溃/退出路径调用：强制保存三个页面的草稿与个人配置。
+    /// 不依赖各页的 _isDirty 判断（保存失败等情况需要重试），
+    /// 单个页面失败不影响其余页面。
+    /// </summary>
+    public void FlushDraftsAndProfile()
+    {
+        FlushOne(_monthly is null ? null : _monthly.FlushDraft);
+        FlushOne(_daily is null ? null : _daily.FlushDraft);
+        FlushOne(_weekly is null ? null : _weekly.FlushDraft);
+        try
+        {
+            Profile.Save();
+        }
+        catch (Exception ex)
+        {
+            Services.DraftService.WriteErrorLog("保存个人配置失败", ex);
+        }
+    }
+
+    private static void FlushOne(Action? flush)
+    {
+        if (flush is null) return;
+        try
+        {
+            flush();
+        }
+        catch (Exception ex)
+        {
+            Services.DraftService.WriteErrorLog("强制保存草稿失败", ex);
+        }
+    }
 }
 
 /// <summary>Tab 切换转换器：SelectedTab == 参数 时按钮选中；取消选中不改变当前页。</summary>

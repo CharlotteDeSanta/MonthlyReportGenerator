@@ -7,14 +7,18 @@ namespace MonthlyReportGenerator;
 
 public partial class MainWindow : FluentWindow
 {
-    private readonly ShellViewModel _viewModel;
+    /// <summary>供 App 在崩溃/退出路径上强制落盘使用。</summary>
+    public ShellViewModel ViewModel { get; }
 
     public MainWindow()
     {
         InitializeComponent();
-        _viewModel = new ShellViewModel();
-        DataContext = _viewModel;
-        Closing += (_, _) => _viewModel.Shutdown();
+        ViewModel = new ShellViewModel();
+        DataContext = ViewModel;
+
+        // 关闭：保存全部草稿 + 个人配置（FlushDrafts 内部保证只执行一次）
+        Closing += (_, _) => (Application.Current as App)?.OnMainWindowClosed();
+
         Loaded += OnWindowLoaded;
     }
 
@@ -33,7 +37,7 @@ public partial class MainWindow : FluentWindow
                 LevelCombo.IsDropDownOpen = false;
             }));
 
-            _viewModel.PreloadPages(Dispatcher);
+            ViewModel.PreloadPages(Dispatcher);
         }));
     }
 }

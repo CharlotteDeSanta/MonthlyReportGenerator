@@ -45,6 +45,14 @@ public class DailyReportViewModel : ObservableObject
         private set => Set(ref _noticeText, value);
     }
 
+    /// <summary>导出进行中的提示（空串 = 空闲）。</summary>
+    private string _busyText = "";
+    public string BusyText
+    {
+        get => _busyText;
+        private set => Set(ref _busyText, value);
+    }
+
     public DailyReportViewModel(ProfileViewModel profile)
     {
         _profile = profile;
@@ -53,8 +61,8 @@ public class DailyReportViewModel : ObservableObject
         _month = today.Month;
         Years = Enumerable.Range(2026, 10).ToArray(); // 2026–2035
 
-        ExportCommand = new RelayCommand(Export);
-        ClearCommand = new RelayCommand(ClearAll);
+        ExportCommand = new RelayCommand(Export, () => !IsBusy);
+        ClearCommand = new RelayCommand(ClearAll, () => !IsBusy);
 
         ReloadMonth();
 
@@ -93,7 +101,7 @@ public class DailyReportViewModel : ObservableObject
         }
 
         _isDirty = false;
-        NoticeText = _notice;
+        RefreshNotice();
     }
 
     private void Attach(DailyDayEntry entry)
@@ -106,9 +114,59 @@ public class DailyReportViewModel : ObservableObject
 
     private void Export()
     {
+        var errors = GetValidationErrors();
+        if (errors.Count > 0)
+        {
+            MessageBox.Show(string.Join(Environment.NewLine, errors), "无法导出",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var snapshot = Days.ToList();
         SaveDraftNow();
-        ExportHelper.ExportWithDialog(ReportExporter.DailyFileName(Year, Month),
-            path => ReportExporter.ExportDaily(Days.ToList(), path));
+        _ = ExportAsync(snapshot);
+    }
+
+    /// <summary>导出前校验（与月报页保持一致：姓名为报表必填项）。</summary>
+    private List<string> GetValidationErrors()
+    {
+        var errors = new List<string>();
+        if (string.IsNullOrWhiteSpace(_profile.EmployeeName))
+            errors.Add("请在窗口顶部填写姓名（日报的项目技术负责人/实施人员列需要它）");
+        return errors;
+    }
+
+    private async Task ExportAsync(List<DailyDayEntry> snapshot)
+    {
+        SetBusy(true, "正在导出，请稍候……");
+        try
+        {
+            await ExportHelper.ExportWithDialogAsync(ReportExporter.DailyFileName(Year, Month),
+                path => ReportExporter.ExportDaily(snapshot, path));
+        }
+        catch (ExportReportedException)
+        {
+            // 失败已在 ExportHelper 内提示并记日志
+        }
+        catch (Exception ex)
+        {
+            ExportHelper.ReportError(ex);
+        }
+        finally
+        {
+            SetBusy(false, "");
+        }
+    }
+
+    private bool _isBusy;
+    private bool IsBusy => _isBusy;
+
+    private void SetBusy(bool busy, string text)
+    {
+        _isBusy = busy;
+        BusyText = text;
+        (ExportCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (ClearCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
     private void ClearAll()
@@ -136,8 +194,22 @@ public class DailyReportViewModel : ObservableObject
         if (!_isDirty) return;
         DraftService.SaveDailyDraft(new DailyDraftData { Year = Year, Month = Month, Days = Days.ToList() });
         _isDirty = false;
+        RefreshNotice();
     }
+
+    /// <summary>提示文本 = 草稿恢复提示 + 本地保存失败提示。</summary>
+    private void RefreshNotice() =>
+        NoticeText = string.Join("；", new[] { _notice, DraftService.StorageFailure ?? "" }
+            .Where(x => x.Length > 0));
 
     /// <summary>窗口关闭时调用：保存草稿。</summary>
     public void Shutdown() => SaveDraftNow();
+
+    /// <summary>崩溃/退出路径调用：有改动时强制落盘。</summary>
+    public void FlushDraft()
+    {
+        if (!_isDirty) return;
+        DraftService.SaveDailyDraft(new DailyDraftData { Year = Year, Month = Month, Days = Days.ToList() });
+        _isDirty = false;
+    }
 }

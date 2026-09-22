@@ -201,7 +201,8 @@
                 </StackPanel>
             </Grid>
 
-            <TextBlock Text="{Binding WarningText}" Foreground="#E8A33D" Margin="0,6,0,0" />
+            <TextBlock Text="{Binding BusyText}" FontWeight="Bold" Foreground="#005FB8" Margin="0,6,0,0" />
+            <TextBlock Text="{Binding WarningText}" Foreground="{Binding WarningBrush}" TextWrapping="Wrap" Margin="0,6,0,0" />
         </StackPanel>
     </Grid>
 </UserControl>

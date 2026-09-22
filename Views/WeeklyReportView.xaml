@@ -146,6 +146,9 @@
             </StackPanel>
         </ScrollViewer>
 
-        <TextBlock Grid.Row="3" Text="{Binding NoticeText}" Foreground="#E8A33D" Margin="0,6,0,0" />
+        <StackPanel Grid.Row="3">
+            <TextBlock Text="{Binding BusyText}" FontWeight="Bold" Foreground="#005FB8" Margin="0,6,0,0" />
+            <TextBlock Text="{Binding NoticeText}" Foreground="#E8A33D" TextWrapping="Wrap" Margin="0,6,0,0" />
+        </StackPanel>
     </Grid>
 </UserControl>
